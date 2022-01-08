@@ -4,9 +4,8 @@ import argparse
 from solana.rpc.api import Client
 import requests
 import json
-import dateutil.parser
-from datetime import *
 
+# Lamports per SOL
 LPERS = 1000000000
 
 parser = argparse.ArgumentParser(description='Show Solana staking rewards by epoch. Pass in one or more staking account addresses (csv if more than one) and either a beginning epoch number and optional end epoch number (uses last complete epoch of end epoch is not defined) or a year to calculate for all epochs in a year. Displays a simpe total of all rewards for the perion (in SOL) along withm if verbose output is specified, rewards per epoch.')
@@ -14,6 +13,7 @@ epoch_group = parser.add_argument_group('epoch-based', 'Specify range by epochs'
 date_group = parser.add_argument_group('date-based', 'Specify range by year')
 parser.add_argument("-ad", "--addresses", type=str, required=True, help="Staking account address, csv if more than one")
 parser.add_argument("-v", "--verbose", action="store_true", help="Print rewards per epoch as well as final amount for all epochs")
+parser.add_argument('--version', action='version', version='%(prog)s 1.0')
 date_group.add_argument("-yr", "--year", type=int, choices=[2021,2022], help="Year to return rewards for, only 2021 and 2022 currently supported")
 epoch_group.add_argument("-be", "--beginepoch", type=int, help="Beginning epoch number")
 epoch_group.add_argument("-ee", "--endepoch", type=int, help="End epoch number, defaults to most recent completed epoch if omitted")
@@ -26,7 +26,7 @@ client = Client("https://api.mainnet-beta.solana.com")
 api = 'https://api.mainnet-beta.solana.com'
 
 ads = args.addresses.split(',')
-curr_epoch = client.get_epoch_info()["result"]["epoch"]
+curr_epoch = client.get_epoch_info()["result"]["epoch"]-1
 
 # Use year if preferred
 if args.year:
@@ -56,6 +56,7 @@ def get_reward_for_epoch(ads, epoch):
   """
   
   r = requests.post(api, headers={"Content-Type": "application/json"}, json=json.loads(body))
+  print(r.text)
   return r.json()["result"]
 
 rewards = {}
